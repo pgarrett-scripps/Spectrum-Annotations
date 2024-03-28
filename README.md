@@ -20,7 +20,7 @@ usage: main.py [-h] [--fragment_types FRAGMENT_TYPES [FRAGMENT_TYPES ...]]
 Fragment a peptide sequence.
 
 positional arguments:
-  spectra               The spectra file to read. Shoul dbe a plain text file   
+  spectra               The spectra file to read. Should be a plain text file   
                         with mz and intensity values separated by a space.      
   sequence              The peptide sequence to fragment (Proforma2.0 format).  
 
@@ -28,8 +28,10 @@ options:
   -h, --help            show this help message and exit
   --fragment_types FRAGMENT_TYPES [FRAGMENT_TYPES ...]
                         The fragment types to generate in the format:
-                        {charge}{ion_type}. Supported Ions: a, b, c, x, y, z,   
-                        i, p. (i = Immonium, p = precursor)
+                        {charge}{ion_type}. Supported special ions: [i, p] (i   
+                        = Immonium, p = precursor)], Supported terminal ions:   
+                        [a, b, c, x, y, z], Supported internal ions: [ax, ay,   
+                        az, bx, by, bz, cx, cy, cz].
 
 Processing Options:
   --monoisotopic        Use monoisotopic mass.
@@ -53,7 +55,6 @@ Output Options:
   --annotated_spectra_output ANNOTATED_SPECTRA_OUTPUT
                         The output file to write the annotated spectra data     
                         to.
-
 
 ```
 "# Spectrum-Annotations" 

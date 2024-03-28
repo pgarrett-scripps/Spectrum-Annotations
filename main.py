@@ -21,36 +21,69 @@ def parse_args(args: List[str]) -> dict:
     parser = argparse.ArgumentParser(description='Fragment a peptide sequence.')
 
     # Required arguments
-    parser.add_argument('spectra', type=readable_file_path, help='The spectra file to read. Shoul dbe a plain text file with mz and intensity values separated by a space.')
-    parser.add_argument('sequence', type=str, help='The peptide sequence to fragment (Proforma2.0 format).')
+    parser.add_argument('spectra',
+                        type=readable_file_path,
+                        help='The spectra file to read. Should be a plain text file with mz and intensity values '
+                             'separated by a space.')
+    parser.add_argument('sequence',
+                        type=str,
+                        help='The peptide sequence to fragment (Proforma2.0 format).')
 
     # Options for processing
-    parser.add_argument('--fragment_types', type=str, nargs='+', help='The fragment types to generate in the format: {charge}{ion_type}. Supported Ions: a, b, c, x, y, z, i, p. (i = Immonium, p = precursor)', default=['1b', '1y'])
+    parser.add_argument('--fragment_types',
+                        type=str,
+                        nargs='+',
+                        help='The fragment types to generate in the format: {charge}{ion_type}. '
+                             'Supported special ions: [i, p] (i = Immonium, p = precursor)], '
+                             'Supported terminal ions: [a, b, c, x, y, z], '
+                             'Supported internal ions: [ax, ay, az, bx, by, bz, cx, cy, cz].',
+                        default=['1b', '1y'])
     processing_group = parser.add_argument_group('Processing Options')
-    processing_group.add_argument('--monoisotopic', action='store_true', help='Use monoisotopic mass.')
-    processing_group.add_argument('--isotopes', type=int, nargs='+', help='The isotopes to consider, include 0 for base peak.', default=[0])
-    processing_group.add_argument('--losses', type=int, nargs='+', help='The losses to consider, include 0 for no loss.', default=[0])
+    processing_group.add_argument('--monoisotopic',
+                                  action='store_true',
+                                  help='Use monoisotopic mass.')
+    processing_group.add_argument('--isotopes',
+                                  type=int,
+                                  nargs='+',
+                                  help='The isotopes to consider, include 0 for base peak.',
+                                  default=[0])
+    processing_group.add_argument('--losses',
+                                  type=int,
+                                  nargs='+',
+                                  help='The losses to consider, include 0 for no loss.',
+                                  default=[0])
 
     # Options for error tolerance and peak assignment
     tolerance_group = parser.add_argument_group('Tolerance and Peak Assignment')
-    tolerance_group.add_argument('--error_tolerance', type=float,
-                                 help='The error tolerance to consider when matching peaks.', default=50)
-    tolerance_group.add_argument('--error_tolerance_type', choices=['ppm', 'th'],
-                                 help='The type of error tolerance to consider when matching peaks.', default='ppm')
-    tolerance_group.add_argument('--peak_assignment', choices=['closest', 'largest'],
-                                 help='The method to use when assigning peaks to fragments.', default='closest')
+    tolerance_group.add_argument('--error_tolerance',
+                                 type=float,
+                                 help='The error tolerance to consider when matching peaks.',
+                                 default=50)
+    tolerance_group.add_argument('--error_tolerance_type',
+                                 choices=['ppm', 'th'],
+                                 help='The type of error tolerance to consider when matching peaks.',
+                                 default='ppm')
+    tolerance_group.add_argument('--peak_assignment',
+                                 choices=['closest', 'largest'],
+                                 help='The method to use when assigning peaks to fragments.',
+                                 default='closest')
 
     # Output options
     output_group = parser.add_argument_group('Output Options')
-    output_group.add_argument('--fragment_output', type=writable_file_path,
-                              help='The output file to write the fragment data to.', default='frags.csv')
-    output_group.add_argument('--annotated_spectra_output', type=writable_file_path,
-                              help='The output file to write the annotated spectra data to.', default='annots.csv')
+    output_group.add_argument('--fragment_output',
+                              type=writable_file_path,
+                              help='The output file to write the fragment data to.',
+                              default='frags.csv')
+    output_group.add_argument('--annotated_spectra_output',
+                              type=writable_file_path,
+                              help='The output file to write the annotated spectra data to.',
+                              default='annots.csv')
 
     return vars(parser.parse_args(args))
 
 
-def get_fragments(sequence: str, fragment_types: List[str], monoisotopic: bool, isotopes: List[int] | None, losses: List[int] | None) -> List[pt.Fragment]:
+def get_fragments(sequence: str, fragment_types: List[str], monoisotopic: bool, isotopes: List[int] | None,
+                  losses: List[int] | None) -> List[pt.Fragment]:
 
     if isotopes is None:
         isotopes = [0]
@@ -72,10 +105,16 @@ def get_fragments(sequence: str, fragment_types: List[str], monoisotopic: bool, 
 
     return fragments
 
-def get_annotations(mz_values: List[float], intensity_values: List[float], fragments: List[pt.Fragment], mass_tolerance: float, mass_tolerance_type: str, peak_assignment:str) -> List[pt.FragmentMatch]:
+def get_annotations(mz_values: List[float], intensity_values: List[float], fragments: List[pt.Fragment],
+                    mass_tolerance: float, mass_tolerance_type: str, peak_assignment:str) -> List[pt.FragmentMatch]:
 
-    fragment_matches = pt.get_fragment_matches(fragments, mz_values, intensity_values, mass_tolerance, mass_tolerance_type,
+    fragment_matches = pt.get_fragment_matches(fragments,
+                                               mz_values,
+                                               intensity_values,
+                                               mass_tolerance,
+                                               mass_tolerance_type,
                                                'largest' if peak_assignment == 'most intense' else 'closest')
+
     fragment_matches.sort(key=lambda x: abs(x.error), reverse=True)
     fragment_matches = {fm.mz: fm for fm in fragment_matches}  # keep the best fragment match for each mz
 
