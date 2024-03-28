@@ -140,6 +140,12 @@ if __name__ == '__main__':
              losses=args['losses'])
 
     frag_df = pd.DataFrame([fragment.to_dict() for fragment in fragments])
+    frag_df = frag_df.round(5)
+    frag_df['start'] = frag_df['start'].astype(int)
+    frag_df['end'] = frag_df['end'].astype(int)
+    frag_df['isotope'] = frag_df['isotope'].astype(int)
+    frag_df['charge'] = frag_df['charge'].astype(int)
+
 
     fragment_matches = get_annotations(mz_values,
                                intensity_values,
@@ -166,11 +172,17 @@ if __name__ == '__main__':
     match_df['abs_error'] = match_df['error'].abs()
     match_df['abs_error_ppm'] = match_df['error_ppm'].abs()
 
+
     # merge dfs
     spectra_df = pd.concat([match_df, unassigned_df], ignore_index=True)
-
-    # sort by mz
     spectra_df = spectra_df.sort_values(by='mz')
+    spectra_df = spectra_df.round(5)
+
+    # make start, end, isotope, and charge columns be integers (some values are nan)
+    spectra_df['start'] = spectra_df['start'].astype('Int16')
+    spectra_df['end'] = spectra_df['end'].astype('Int16')
+    spectra_df['isotope'] = spectra_df['isotope'].astype('Int16')
+    spectra_df['charge'] = spectra_df['charge'].astype('Int16')
 
 
     # make macthed column be 3rd column
