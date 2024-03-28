@@ -155,30 +155,47 @@ if __name__ == '__main__':
                                args['peak_assignment'])
 
 
-    match_data = []
-    data = []
-    for mz, intensity in zip(mz_values, intensity_values):
-        fm = fragment_matches.get(mz, None)
-        if fm:
-            match_data.append(fm.to_dict())
-        else:
-            data.append({'mz': mz, 'intensity': intensity})
+    if len(fragment_matches) == 0:
 
-    unassigned_df = pd.DataFrame(data)
-    unassigned_df['matched'] = False
+        empty_frag_match = pt.FragmentMatch(None, 0, 0)
+        cols = list(empty_frag_match.to_dict().keys())
 
-    match_df = pd.DataFrame(match_data)
-    match_df['matched'] = True
-    match_df['abs_error'] = match_df['error'].abs()
-    match_df['abs_error_ppm'] = match_df['error_ppm'].abs()
+        data = []
+        for mz, intensity in zip(mz_values, intensity_values):
+            data.append({'mz': mz, 'intensity': intensity, 'matched': False})
+
+        spectra_df = pd.DataFrame(data)
+
+        # add other cols as nan
+        for col in cols:
+            if col not in spectra_df.columns:
+                spectra_df[col] = None
 
 
-    # merge dfs
-    spectra_df = pd.concat([match_df, unassigned_df], ignore_index=True)
+    else:
+        match_data = []
+        data = []
+        for mz, intensity in zip(mz_values, intensity_values):
+            fm = fragment_matches.get(mz, None)
+            if fm:
+                match_data.append(fm.to_dict())
+            else:
+                data.append({'mz': mz, 'intensity': intensity})
+
+        unassigned_df = pd.DataFrame(data)
+        unassigned_df['matched'] = False
+
+        match_df = pd.DataFrame(match_data)
+        match_df['matched'] = True
+        match_df['abs_error'] = match_df['error'].abs()
+        match_df['abs_error_ppm'] = match_df['error_ppm'].abs()
+
+        # merge dfs
+        spectra_df = pd.concat([match_df, unassigned_df], ignore_index=True)
+
+
     spectra_df = spectra_df.sort_values(by='mz')
     spectra_df = spectra_df.round(5)
-
-    # make start, end, isotope, and charge columns be integers (some values are nan)
     spectra_df['start'] = spectra_df['start'].astype('Int16')
     spectra_df['end'] = spectra_df['end'].astype('Int16')
     spectra_df['isotope'] = spectra_df['isotope'].astype('Int16')
